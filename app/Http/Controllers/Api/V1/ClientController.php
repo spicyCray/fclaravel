@@ -1,12 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ClientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\response;
 use Illuminate\Validation\validate;
+use App\Http\Middleware\ApiJwt;
+use App\Models\User;
 class ClientController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware(ApiJwt::class)->only('index');
+
+        // $this->middleware('log')->only('index');
+
+        // $this->middleware('subscribed')->except('store');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -14,9 +26,10 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+
         $client = new \App\Models\Client();
 
-        $list = $client::all();
+        $list = $client::withTrashed()->get();
 
         return $list;
 
@@ -29,21 +42,19 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        // $request->validate([
-        //         'title' => 'bail|required|string|between:2,32',
-        //         'url' => 'sometimes|url|max:200',
-        //         'picture' => 'nullable|string'
-        //     ]);
-        $rules = [
-            'title'=>'required|string|max:100|min:5',
-            'content'=>'required|min:10'
-        ];
 
-        $message = [
-            'title.required' => '标题不能为空'
-        ];
+        // echo "<pre>";
+        //     print_r($request->post());
+        // echo "</pre>";
+        // die;
 
-        return $this->validate($request,$rules,$message);
+        $client = new \App\Models\Client();
+
+        $client->name = $request->post('name');
+        $client->content = $request->post('content');
+
+
+        $client::create($request->post());
         echo 'store';
     }
     /**
@@ -52,14 +63,13 @@ class ClientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id,$name)
     {
-
         $client = new \App\Models\Client();
 
-        $list = $client::find($id);
+        $res = $client::where('name','like','%'.$name.'%')->get();
 
-        return $list;
+        return $res;
     }
 
 
@@ -70,9 +80,14 @@ class ClientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update()
+    public function update(Request $request)
     {
-        echo 'update';
+        $client = new \App\Models\Client();
+
+        return $client::where('id',$request->all('id'))->update($request->all('name'));
+        // $list = $client::where('id',);
+
+        // return $list;
     }
     /**
      * Remove the specified resource from storage.
@@ -80,8 +95,12 @@ class ClientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy()
+    public function destroy($id)
     {
-        echo 'destroy';
+        $client = new \App\Models\Client();
+
+        $list = $client::destroy($id);
+
+        return $list;
     }
 }
