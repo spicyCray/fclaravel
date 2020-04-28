@@ -10,7 +10,6 @@ use App\Http\Middleware\ApiJwt;
 use App\Models\User;
 class ClientController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware(ApiJwt::class)->only('index');
